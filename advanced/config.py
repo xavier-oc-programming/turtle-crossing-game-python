@@ -11,7 +11,7 @@ SCREEN_TITLE: str = "Turtle Crossing"
 # ---------------------------------------------------------------------------
 PLAYER_SHAPE: str = "turtle"
 PLAYER_START_X: int = 0
-PLAYER_START_Y: int = -260
+PLAYER_START_Y: int = -280
 PLAYER_HEADING: int = 90          # faces upward
 PLAYER_MOVE_DISTANCE: int = 15    # pixels per Up key press
 FINISH_LINE_Y: int = 280          # y-threshold that counts as a crossing
