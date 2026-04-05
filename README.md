@@ -4,6 +4,25 @@
 
 ---
 
+## Contents
+
+1. [Quick Start](#1-quick-start)
+2. [Builds Comparison](#2-builds-comparison)
+3. [Controls](#3-controls)
+4. [Gameplay Rules](#4-gameplay-rules)
+5. [Features](#5-features)
+6. [Navigation Flow](#6-navigation-flow)
+7. [Architecture](#7-architecture)
+8. [Module Reference](#8-module-reference)
+9. [Configuration Reference](#9-configuration-reference)
+10. [Display Layout](#10-display-layout)
+11. [Design Decisions](#11-design-decisions)
+12. [Known Limitations](#12-known-limitations)
+13. [Course Context](#13-course-context)
+14. [Dependencies](#14-dependencies)
+
+---
+
 ## 1. Quick Start
 
 ```bash
@@ -29,10 +48,10 @@ No third-party packages. `turtle` and `tkinter` are bundled with CPython.
 | Feature | Original | Advanced |
 |---|---|---|
 | Screen size | 600 × 600 | 600 × 600 |
-| Player movement | Up arrow | Up arrow (smooth hold) |
+| Player movement | Up arrow (key-repeat) | Up arrow (smooth hold) |
 | Car spawning | Random, 1-in-6 per tick | Random, 1-in-6 per tick |
 | Collision detection | Margin-based | Margin-based |
-| Level display | Top-left HUD | Top-left HUD + best score |
+| Level display | Top-left HUD | Level left · Best right |
 | Level-up flash | None | "LEVEL X" centred flash |
 | High score persistence | None | `data.txt` (survives restarts) |
 | Title screen | None | Animated reveal with controls |
@@ -90,7 +109,7 @@ No third-party packages. `turtle` and `tkinter` are bundled with CPython.
 ### Both builds
 
 **Random car spawning**
-Each tick has a 1-in-6 chance of spawning a new car at `x = 300` and a random y-position between −240 and 240. Cars are coloured randomly from six options.
+Each tick has a 1-in-6 chance of spawning a new car at `x = 300` and a random y-position between −250 and 250. Cars are coloured randomly from six options.
 
 **Margin-based collision detection**
 The hit zone is ±25 px horizontally and ±30 px vertically around the player's position, matching the turtle head and car body dimensions.
@@ -110,10 +129,16 @@ Space pauses the game mid-tick. The overlay is drawn on top of the frozen game s
 Instead of closing the window, a "GAME OVER" overlay appears on the frozen state showing the level reached and the best score. Space replays from level 1; R returns to the title screen.
 
 **Level-up flash**
-A large yellow "LEVEL X" message flashes centred on screen for 0.8 s after each crossing, then clears. The HUD is redrawn immediately after.
+A large blue "LEVEL X" message flashes centred on screen for 0.8 s after each crossing, then clears. The HUD is redrawn immediately after.
 
 **Persistent high score**
-The best level reached is written to `advanced/data.txt` as a plain integer. It is loaded at startup and shown alongside the current level in the HUD throughout the session.
+The best level reached is written to `advanced/data.txt` as a plain integer. It is loaded at startup and shown in the top-right HUD throughout the session.
+
+**Split HUD**
+Level counter sits top-left; best score sits top-right. Both are redrawn after every overlay via a single `render_score()` call.
+
+**Window boundary**
+A black rectangle outlines the 600 × 600 game area so the boundary stays visible when the window is maximised.
 
 **R never closes the window**
 Pressing R from any overlay breaks the inner game loop and returns to the outer loop, which reruns the title screen in the same window. The window only closes when Q is pressed on the title screen (`display.close()` → `sys.exit(0)`).
@@ -252,10 +277,10 @@ turtle-crossing-game-python/
 
 | Method | Description |
 |---|---|
-| `__init__()` | Creates Screen, player turtle, writer turtle; draws finish line |
+| `__init__()` | Creates Screen, player turtle, writer turtle; draws border and overlay separator |
 | `render_player(x, y)` | Moves player turtle to given coordinates |
 | `render_cars(cars)` | Syncs car turtle pool to the logic car list |
-| `render_score(level, high_score)` | Clears `_writer` and redraws HUD |
+| `render_score(level, high_score)` | Clears `_writer` and redraws split HUD (level left, best right) |
 | `show_welcome() → str \| None` | Animated title screen; returns `"start"` or `None` (quit) |
 | `show_pause() → bool` | Pause overlay; returns `True` (resume) or `False` (title) |
 | `show_game_over(level, high_score, new_high) → bool` | Game over overlay; returns `True` (play again) or `False` (title) |
@@ -272,21 +297,21 @@ All constants live in `advanced/config.py`. Zero magic numbers exist anywhere el
 |---|---|---|
 | `SCREEN_WIDTH` | `600` | Window width in pixels |
 | `SCREEN_HEIGHT` | `600` | Window height in pixels |
-| `SCREEN_BG` | `"black"` | Background colour |
+| `SCREEN_BG` | `"white"` | Background colour |
 | `SCREEN_TITLE` | `"Turtle Crossing"` | Window title bar text |
 | `PLAYER_SHAPE` | `"turtle"` | Turtle shape name |
 | `PLAYER_START_X` | `0` | Player starting x-coordinate |
-| `PLAYER_START_Y` | `-260` | Player starting y-coordinate |
+| `PLAYER_START_Y` | `-280` | Player starting y-coordinate |
 | `PLAYER_HEADING` | `90` | Player heading in degrees (upward) |
-| `PLAYER_MOVE_DISTANCE` | `15` | Pixels moved per Up key press |
+| `PLAYER_MOVE_DISTANCE` | `10` | Pixels moved per Up key press |
 | `FINISH_LINE_Y` | `280` | y-threshold that counts as a crossing |
 | `CAR_COLORS` | 6-colour list | Possible car colours |
 | `CAR_STRETCH_WID` | `1` | Car turtle shapesize stretch_wid |
 | `CAR_STRETCH_LEN` | `2` | Car turtle shapesize stretch_len (2× wide) |
 | `CAR_SPAWN_X` | `300` | x where new cars appear |
 | `CAR_DESPAWN_X` | `-320` | x past which cars are removed |
-| `CAR_Y_MIN` | `-240` | Lowest y for car spawns |
-| `CAR_Y_MAX` | `240` | Highest y for car spawns |
+| `CAR_Y_MIN` | `-250` | Lowest y for car spawns |
+| `CAR_Y_MAX` | `250` | Highest y for car spawns |
 | `CAR_SPAWN_CHANCE` | `6` | 1-in-N chance to spawn per tick |
 | `STARTING_CAR_SPEED` | `2.5` | Pixels per tick at level 1 |
 | `SPEED_INCREMENT` | `2.4` | Speed added per level up |
@@ -296,10 +321,10 @@ All constants live in `advanced/config.py`. Zero magic numbers exist anywhere el
 | `GAME_TICK` | `0.032` | Seconds per tick (~60 FPS) |
 | `WELCOME_LINE_DELAY` | `0.06` | Seconds between title-screen line reveals |
 | `LEVEL_UP_FLASH_DURATION` | `0.8` | Seconds the level-up flash is visible |
-| `HUD_Y` | `260` | y of the level/best score HUD |
-| `HUD_X` | `-270` | x of the HUD (left-aligned) |
+| `HUD_Y` | `260` | y of the HUD strip |
+| `HUD_X` | `-270` | x of level label (left-aligned) |
+| `HUD_RIGHT_X` | `270` | x of best score (right-aligned) |
 | `HUD_FONT_SIZE` | `24` | HUD font size |
-| `FINISH_LINE_DISPLAY_Y` | `270` | y of the visual finish line |
 | `ROAD_TOP_Y` | `250` | Top of the car spawn zone |
 | `ROAD_BOTTOM_Y` | `-250` | Bottom of the car spawn zone |
 
@@ -309,15 +334,16 @@ All constants live in `advanced/config.py`. Zero magic numbers exist anywhere el
 
 ```
 y = +300 ─────────────────────────────────────────────────────
-           Level: 3   Best: 5          (HUD, white text)
-y = +270 ══════════════════════════════════════════════════════  ← finish line (white)
-y = +250
+           Level: 3 (black, left)      Best: 5 (black, right)
+y = +280 ·  ·  ·  ·  ·  ·  (finish line threshold — logic only)
+
            [ cars move right-to-left across this zone ]
-           [ random y between -240 and +240           ]
+           [ random y between -250 and +250           ]
            [ spawned at x=300, despawned at x=-320    ]
+
 y =    0   ·  ·  ·  ·  ·  ·  · (centre)
-           
-y = -260   🐢  (player start, x=0)
+
+y = -280   🐢  (player start, x=0)
 
 y = -300 ─────────────────────────────────────────────────────
 
@@ -325,8 +351,10 @@ x:  -300                    0                    +300
 ```
 
 Overlays (PAUSED / GAME OVER) are drawn centred at approximately:
-- Heading: `y = +30` to `y = +60` (large bold text)
+- Heading: `y = +30` (large bold text)
 - Subtext / options: `y = −30` to `y = −80`
+
+> See [§12 Known Limitations](#12-known-limitations) — overlay text can be obscured by cars at high levels.
 
 ---
 
@@ -362,19 +390,19 @@ One turtle handles all text output: HUD scores, overlay messages, and the title 
 
 ### Static elements drawn in `__init__`
 
-The finish line is drawn once using a dedicated `Turtle` object in `__init__`. It persists for the lifetime of the window and is never cleared, because it is drawn by its own turtle — not by `_writer`. This means `_writer.clear()` (called by every overlay) cannot accidentally erase it.
+The window border and overlay separator are drawn once using dedicated `Turtle` objects in `__init__`. They persist for the lifetime of the window and are never cleared, because they are drawn by their own turtles — not by `_writer`. This means `_writer.clear()` (called by every overlay) cannot accidentally erase them.
 
 ---
 
-## 11.1 Known Limitations
+## 12. Known Limitations
 
 ### Pause overlay z-ordering
 
-The pause overlay text ("PAUSED" + options) can be obscured by cars when there are many on screen. The root cause is a turtle/tkinter constraint: `screen.update()` internally calls `canvas.tag_raise()` on every turtle's shape item on each call, which re-promotes all car polygons to the top of the canvas stack regardless of what was drawn on top of them. Standard fixes (raising the overlay rect and text via the canvas API after each update, lowering all polygon items before raising the overlay) were attempted but did not reliably hold between update cycles. A working solution would require either rendering the overlay in a separate tkinter widget or freezing the screen entirely (hiding all car turtles) during the overlay, both of which change the visual behaviour. Left as-is for now.
+The pause and game-over overlay text can be obscured by cars when there are many on screen. The root cause is a turtle/tkinter constraint: `screen.update()` internally calls `canvas.tag_raise()` on every turtle's shape item, which re-promotes all car polygons to the top of the canvas stack regardless of what was drawn on top of them. Attempted fixes included raising the overlay rect and text via the canvas API after each update cycle, and lowering all polygon items before raising the overlay — neither held reliably. A working solution would require rendering the overlay in a separate tkinter widget, or hiding all car turtles during the overlay (which changes the visual). Left as-is for now.
 
 ---
 
-## 12. Course Context
+## 13. Course Context
 
 **Course:** 100 Days of Code: The Complete Python Pro Bootcamp (Udemy — Dr. Angela Yu)
 **Day:** 23
@@ -391,7 +419,7 @@ The `original/` folder is the direct course output. The `advanced/` folder rebui
 
 ---
 
-## 13. Dependencies
+## 14. Dependencies
 
 | Module | Used for |
 |---|---|
