@@ -14,7 +14,6 @@ from config import (
     HUD_X,
     HUD_Y,
     HUD_FONT_SIZE,
-    FINISH_LINE_DISPLAY_Y,
     WELCOME_LINE_DELAY,
     LEVEL_UP_FLASH_DURATION,
 )
@@ -37,9 +36,6 @@ class Display:
         # Single writer for ALL text (HUD + overlays)
         self._writer: Turtle = self._make_writer()
 
-        # Static elements drawn once and never cleared
-        self._draw_finish_line()
-
         self.screen.listen()
 
     # ------------------------------------------------------------------
@@ -58,7 +54,7 @@ class Display:
         t = Turtle()
         t.hideturtle()
         t.penup()
-        t.color("white")
+        t.color("black")
         return t
 
     def _make_car(self, color: str) -> Turtle:
@@ -68,16 +64,6 @@ class Display:
         t.shapesize(stretch_wid=CAR_STRETCH_WID, stretch_len=CAR_STRETCH_LEN)
         t.penup()
         return t
-
-    def _draw_finish_line(self) -> None:
-        """Horizontal finish line — drawn once in __init__, never cleared."""
-        line = Turtle()
-        line.hideturtle()
-        line.penup()
-        line.color("white")
-        line.goto(-SCREEN_WIDTH // 2, FINISH_LINE_DISPLAY_Y)
-        line.pendown()
-        line.goto(SCREEN_WIDTH // 2, FINISH_LINE_DISPLAY_Y)
 
     # ------------------------------------------------------------------
     # Per-frame render calls (called every tick from main)
@@ -104,7 +90,7 @@ class Display:
 
     def render_score(self, level: int, high_score: int = 0) -> None:
         self._writer.clear()
-        self._writer.color("white")
+        self._writer.color("black")
         self._writer.goto(HUD_X, HUD_Y)
         self._writer.write(
             f"Level: {level}   Best: {high_score}",
@@ -182,7 +168,7 @@ class Display:
         Returns False → return to title screen.
         """
         self._writer.goto(0, 30)
-        self._writer.color("white")
+        self._writer.color("black")
         self._writer.write(
             "PAUSED",
             align="center",
@@ -233,7 +219,7 @@ class Display:
             font=("Courier", 50, "bold"),
         )
         self._writer.goto(0, 0)
-        self._writer.color("white")
+        self._writer.color("black")
         record_text = "  NEW RECORD!" if new_high else ""
         self._writer.write(
             f"Level reached: {level}{record_text}",
@@ -280,7 +266,7 @@ class Display:
     def show_level_up(self, level: int) -> None:
         """Brief centred flash showing the new level number."""
         self._writer.goto(0, 0)
-        self._writer.color("yellow")
+        self._writer.color("blue")
         self._writer.write(
             f"LEVEL {level}",
             align="center",

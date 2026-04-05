@@ -3,7 +3,7 @@
 # ---------------------------------------------------------------------------
 SCREEN_WIDTH: int = 600
 SCREEN_HEIGHT: int = 600
-SCREEN_BG: str = "black"
+SCREEN_BG: str = "white"
 SCREEN_TITLE: str = "Turtle Crossing"
 
 # ---------------------------------------------------------------------------
