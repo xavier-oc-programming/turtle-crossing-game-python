@@ -81,14 +81,14 @@ class Display:
         t.penup()
 
     def _show_overlay_bg(self, x1: int, y1: int, x2: int, y2: int) -> None:
-        """Draw a light grey filled rect using turtle coords.  Sits above all existing items."""
+        """Draw a light grey filled rect using turtle coords.  Sits above all existing items.
+
+        create_rectangle uses canvas world coords: same x as turtle, y-axis flipped.
+        turtle (x, y) → canvas (x, -y).  Top of rect in turtle (y2) → top in canvas (-y2).
+        """
         canvas = self.screen.getcanvas()
-        hw, hh = SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
-        # Convert turtle (x, y) → canvas (cx, cy): cx = x + hw, cy = hh - y
-        cx1, cy1 = x1 + hw, hh - y2   # turtle top-left  → canvas top-left
-        cx2, cy2 = x2 + hw, hh - y1   # turtle bot-right → canvas bot-right
         self._overlay_bg_id = canvas.create_rectangle(
-            cx1, cy1, cx2, cy2, fill="light grey", outline="light grey",
+            x1, -y2, x2, -y1, fill="light grey", outline="light grey",
         )
 
     def _hide_overlay_bg(self) -> None:
