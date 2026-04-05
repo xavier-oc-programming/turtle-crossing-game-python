@@ -17,6 +17,11 @@ from config import (
     HUD_FONT_SIZE,
     WELCOME_LINE_DELAY,
     LEVEL_UP_FLASH_DURATION,
+    OVERLAY_SEPARATOR_Y,
+    OVERLAY_BG_TOP,
+    OVERLAY_BG_BOTTOM,
+    OVERLAY_HEADING_Y,
+    OVERLAY_SUBTEXT_Y,
 )
 
 
@@ -37,11 +42,9 @@ class Display:
         # Single writer for ALL text (HUD + overlays)
         self._writer: Turtle = self._make_writer()
 
-        # Canvas item ID for overlay background rect (None when not shown)
-        self._overlay_bg_id: int | None = None
-
-        # Static border drawn once — shows the 600×600 boundary when maximised
+        # Static elements drawn once in __init__
         self._draw_border()
+        self._draw_overlay_separator()
 
         self.screen.listen()
 
@@ -65,7 +68,7 @@ class Display:
         return t
 
     def _draw_border(self) -> None:
-        """Black outline at the 600×600 game boundary — visible when window is maximised."""
+        """Black outline at the game boundary — visible when window is maximised."""
         t = Turtle()
         t.hideturtle()
         t.penup()
@@ -80,41 +83,17 @@ class Display:
             t.left(90)
         t.penup()
 
-    def _show_overlay_bg(self, x1: int, y1: int, x2: int, y2: int) -> None:
-        """Draw a light grey filled rect using turtle coords.  Sits above all existing items.
-
-        create_rectangle uses canvas world coords: same x as turtle, y-axis flipped.
-        turtle (x, y) → canvas (x, -y).  Top of rect in turtle (y2) → top in canvas (-y2).
-        """
-        canvas = self.screen.getcanvas()
-        self._overlay_bg_id = canvas.create_rectangle(
-            x1, -y2, x2, -y1, fill="light grey", outline="light grey",
-        )
-
-    def _hide_overlay_bg(self) -> None:
-        if self._overlay_bg_id is not None:
-            self.screen.getcanvas().delete(self._overlay_bg_id)
-            self._overlay_bg_id = None
-
-    def _raise_overlay(self) -> None:
-        """Keep overlay on top after screen.update().
-
-        screen.update() calls canvas.tag_raise() on every turtle shape item,
-        re-promoting all car polygons above anything we added.  The fix:
-          1. Lower every polygon to the bottom of the stack.
-          2. Raise the overlay background rect above them.
-          3. Raise all text items above the rect.
-        Runs every 50 ms in the polling loop — fast enough for <50 canvas items.
-        """
-        canvas = self.screen.getcanvas()
-        for item in canvas.find_all():
-            if canvas.type(item) == "polygon":
-                canvas.tag_lower(item)
-        if self._overlay_bg_id is not None:
-            canvas.tag_raise(self._overlay_bg_id)
-        for item in canvas.find_all():
-            if canvas.type(item) == "text":
-                canvas.tag_raise(item)
+    def _draw_overlay_separator(self) -> None:
+        """Thin grey line dividing the game area from the overlay strip below."""
+        t = Turtle()
+        t.hideturtle()
+        t.penup()
+        t.color("grey")
+        t.width(1)
+        t.goto(-(SCREEN_WIDTH // 2), OVERLAY_SEPARATOR_Y)
+        t.pendown()
+        t.goto(SCREEN_WIDTH // 2, OVERLAY_SEPARATOR_Y)
+        t.penup()
 
     def _make_car(self, color: str) -> Turtle:
         t = Turtle()
@@ -227,28 +206,25 @@ class Display:
     # ------------------------------------------------------------------
 
     def show_pause(self) -> bool:
-        """Overlay PAUSED on the frozen game state.  Do NOT clear screen first.
+        """Write pause prompt in the overlay strip below the game area.
 
         Returns True  → resume.
         Returns False → return to title screen.
         """
-        # Grey background rect — created on canvas so it sits above cars
-        self._show_overlay_bg(-280, -60, 280, 100)
-        self._writer.goto(0, 30)
+        self._writer.goto(0, OVERLAY_HEADING_Y)
         self._writer.color("black")
         self._writer.write(
             "PAUSED",
             align="center",
-            font=("Courier", 50, "bold"),
+            font=("Courier", 32, "bold"),
         )
-        self._writer.goto(0, -30)
+        self._writer.goto(0, OVERLAY_SUBTEXT_Y)
         self._writer.write(
             "[ SPACE ]  resume        [ R ]  return to title screen",
             align="center",
-            font=("Courier", 16, "normal"),
+            font=("Courier", 14, "normal"),
         )
         self.screen.update()
-        self._raise_overlay()
 
         _choice: dict[str, bool | None] = {"value": None}
 
@@ -262,10 +238,8 @@ class Display:
         while _choice["value"] is None:
             time.sleep(0.05)
             self.screen.update()
-            self._raise_overlay()
 
         self._writer.clear()
-        self._hide_overlay_bg()
         self.screen.onkeypress(None, "space")
         self.screen.onkeypress(None, "r")
 
@@ -276,37 +250,25 @@ class Display:
     # ------------------------------------------------------------------
 
     def show_game_over(self, level: int, high_score: int, new_high: bool) -> bool:
-        """Overlay GAME OVER on the frozen game state.  Do NOT clear screen first.
+        """Write game-over info in the overlay strip below the game area.
 
         Returns True  → play again.
         Returns False → return to title screen.
         """
-        self._writer.goto(0, 60)
+        record_text = "  ★ NEW RECORD!" if new_high else ""
+        self._writer.goto(0, OVERLAY_HEADING_Y)
         self._writer.color("red")
         self._writer.write(
-            "GAME OVER",
+            f"GAME OVER — level {level}{record_text}",
             align="center",
-            font=("Courier", 50, "bold"),
+            font=("Courier", 22, "bold"),
         )
-        self._writer.goto(0, 0)
+        self._writer.goto(0, OVERLAY_SUBTEXT_Y)
         self._writer.color("black")
-        record_text = "  NEW RECORD!" if new_high else ""
         self._writer.write(
-            f"Level reached: {level}{record_text}",
+            f"Best: {high_score}     [ SPACE ]  play again     [ R ]  title screen",
             align="center",
-            font=("Courier", 20, "normal"),
-        )
-        self._writer.goto(0, -40)
-        self._writer.write(
-            f"Best: {high_score}",
-            align="center",
-            font=("Courier", 16, "normal"),
-        )
-        self._writer.goto(0, -80)
-        self._writer.write(
-            "[ SPACE ]  play again        [ R ]  return to title screen",
-            align="center",
-            font=("Courier", 16, "normal"),
+            font=("Courier", 14, "normal"),
         )
         self.screen.update()
 
