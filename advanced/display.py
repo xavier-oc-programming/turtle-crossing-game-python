@@ -96,6 +96,21 @@ class Display:
             self.screen.getcanvas().delete(self._overlay_bg_id)
             self._overlay_bg_id = None
 
+    def _raise_overlay(self) -> None:
+        """Re-raise overlay bg and all text items above turtle shapes.
+
+        screen.update() internally calls canvas.tag_raise() on every turtle's
+        shape item, which pushes car polygons above any canvas rect or text we
+        added.  Call this after every screen.update() inside an overlay polling
+        loop to keep the overlay on top.
+        """
+        canvas = self.screen.getcanvas()
+        if self._overlay_bg_id is not None:
+            canvas.tag_raise(self._overlay_bg_id)
+        for item in canvas.find_all():
+            if canvas.type(item) == "text":
+                canvas.tag_raise(item)
+
     def _make_car(self, color: str) -> Turtle:
         t = Turtle()
         t.shape("square")
@@ -213,7 +228,7 @@ class Display:
         Returns False → return to title screen.
         """
         # Grey background rect — created on canvas so it sits above cars
-        self._show_overlay_bg(-250, -60, 250, 100)
+        self._show_overlay_bg(-280, -60, 280, 100)
         self._writer.goto(0, 30)
         self._writer.color("black")
         self._writer.write(
@@ -228,6 +243,7 @@ class Display:
             font=("Courier", 16, "normal"),
         )
         self.screen.update()
+        self._raise_overlay()
 
         _choice: dict[str, bool | None] = {"value": None}
 
@@ -241,6 +257,7 @@ class Display:
         while _choice["value"] is None:
             time.sleep(0.05)
             self.screen.update()
+            self._raise_overlay()
 
         self._writer.clear()
         self._hide_overlay_bg()
