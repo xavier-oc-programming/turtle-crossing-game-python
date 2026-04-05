@@ -366,6 +366,14 @@ The finish line is drawn once using a dedicated `Turtle` object in `__init__`. I
 
 ---
 
+## 11.1 Known Limitations
+
+### Pause overlay z-ordering
+
+The pause overlay text ("PAUSED" + options) can be obscured by cars when there are many on screen. The root cause is a turtle/tkinter constraint: `screen.update()` internally calls `canvas.tag_raise()` on every turtle's shape item on each call, which re-promotes all car polygons to the top of the canvas stack regardless of what was drawn on top of them. Standard fixes (raising the overlay rect and text via the canvas API after each update, lowering all polygon items before raising the overlay) were attempted but did not reliably hold between update cycles. A working solution would require either rendering the overlay in a separate tkinter widget or freezing the screen entirely (hiding all car turtles) during the overlay, both of which change the visual behaviour. Left as-is for now.
+
+---
+
 ## 12. Course Context
 
 **Course:** 100 Days of Code: The Complete Python Pro Bootcamp (Udemy — Dr. Angela Yu)
