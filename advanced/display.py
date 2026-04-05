@@ -97,14 +97,19 @@ class Display:
             self._overlay_bg_id = None
 
     def _raise_overlay(self) -> None:
-        """Re-raise overlay bg and all text items above turtle shapes.
+        """Keep overlay on top after screen.update().
 
-        screen.update() internally calls canvas.tag_raise() on every turtle's
-        shape item, which pushes car polygons above any canvas rect or text we
-        added.  Call this after every screen.update() inside an overlay polling
-        loop to keep the overlay on top.
+        screen.update() calls canvas.tag_raise() on every turtle shape item,
+        re-promoting all car polygons above anything we added.  The fix:
+          1. Lower every polygon to the bottom of the stack.
+          2. Raise the overlay background rect above them.
+          3. Raise all text items above the rect.
+        Runs every 50 ms in the polling loop — fast enough for <50 canvas items.
         """
         canvas = self.screen.getcanvas()
+        for item in canvas.find_all():
+            if canvas.type(item) == "polygon":
+                canvas.tag_lower(item)
         if self._overlay_bg_id is not None:
             canvas.tag_raise(self._overlay_bg_id)
         for item in canvas.find_all():
