@@ -13,7 +13,7 @@ PLAYER_SHAPE: str = "turtle"
 PLAYER_START_X: int = 0
 PLAYER_START_Y: int = -280
 PLAYER_HEADING: int = 90          # faces upward
-PLAYER_MOVE_DISTANCE: int = 15    # pixels per Up key press
+PLAYER_MOVE_DISTANCE: int = 10    # pixels per Up key press
 FINISH_LINE_Y: int = 280          # y-threshold that counts as a crossing
 
 # ---------------------------------------------------------------------------
@@ -52,7 +52,8 @@ LEVEL_UP_FLASH_DURATION: float = 0.8  # seconds the "LEVEL X" flash stays visibl
 # HUD / layout
 # ---------------------------------------------------------------------------
 HUD_Y: int = 260                  # y-position of the level counter
-HUD_X: int = -270                 # x-position of the level counter (left-aligned)
+HUD_X: int = -270                 # x-position of level label (left-aligned)
+HUD_RIGHT_X: int = 270            # x-position of best score (right-aligned)
 HUD_FONT_SIZE: int = 24
 FINISH_LINE_DISPLAY_Y: int = 270  # y of the visual finish line drawn on screen
 ROAD_TOP_Y: int = 250             # top boundary of the road area (car spawns)

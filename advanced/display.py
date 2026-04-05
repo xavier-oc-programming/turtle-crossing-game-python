@@ -13,6 +13,7 @@ from config import (
     CAR_STRETCH_LEN,
     HUD_X,
     HUD_Y,
+    HUD_RIGHT_X,
     HUD_FONT_SIZE,
     WELCOME_LINE_DELAY,
     LEVEL_UP_FLASH_DURATION,
@@ -36,6 +37,12 @@ class Display:
         # Single writer for ALL text (HUD + overlays)
         self._writer: Turtle = self._make_writer()
 
+        # Canvas item ID for overlay background rect (None when not shown)
+        self._overlay_bg_id: int | None = None
+
+        # Static border drawn once — shows the 600×600 boundary when maximised
+        self._draw_border()
+
         self.screen.listen()
 
     # ------------------------------------------------------------------
@@ -56,6 +63,38 @@ class Display:
         t.penup()
         t.color("black")
         return t
+
+    def _draw_border(self) -> None:
+        """Black outline at the 600×600 game boundary — visible when window is maximised."""
+        t = Turtle()
+        t.hideturtle()
+        t.penup()
+        t.color("black")
+        t.width(3)
+        inset = 2
+        t.goto(-(SCREEN_WIDTH // 2) + inset, -(SCREEN_HEIGHT // 2) + inset)
+        t.setheading(0)
+        t.pendown()
+        for _ in range(4):
+            t.forward(SCREEN_WIDTH - 2 * inset)
+            t.left(90)
+        t.penup()
+
+    def _show_overlay_bg(self, x1: int, y1: int, x2: int, y2: int) -> None:
+        """Draw a light grey filled rect using turtle coords.  Sits above all existing items."""
+        canvas = self.screen.getcanvas()
+        hw, hh = SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2
+        # Convert turtle (x, y) → canvas (cx, cy): cx = x + hw, cy = hh - y
+        cx1, cy1 = x1 + hw, hh - y2   # turtle top-left  → canvas top-left
+        cx2, cy2 = x2 + hw, hh - y1   # turtle bot-right → canvas bot-right
+        self._overlay_bg_id = canvas.create_rectangle(
+            cx1, cy1, cx2, cy2, fill="light grey", outline="light grey",
+        )
+
+    def _hide_overlay_bg(self) -> None:
+        if self._overlay_bg_id is not None:
+            self.screen.getcanvas().delete(self._overlay_bg_id)
+            self._overlay_bg_id = None
 
     def _make_car(self, color: str) -> Turtle:
         t = Turtle()
@@ -93,8 +132,14 @@ class Display:
         self._writer.color("black")
         self._writer.goto(HUD_X, HUD_Y)
         self._writer.write(
-            f"Level: {level}   Best: {high_score}",
+            f"Level: {level}",
             align="left",
+            font=("Courier", HUD_FONT_SIZE, "normal"),
+        )
+        self._writer.goto(HUD_RIGHT_X, HUD_Y)
+        self._writer.write(
+            f"Best: {high_score}",
+            align="right",
             font=("Courier", HUD_FONT_SIZE, "normal"),
         )
 
@@ -167,6 +212,8 @@ class Display:
         Returns True  → resume.
         Returns False → return to title screen.
         """
+        # Grey background rect — created on canvas so it sits above cars
+        self._show_overlay_bg(-250, -60, 250, 100)
         self._writer.goto(0, 30)
         self._writer.color("black")
         self._writer.write(
@@ -196,6 +243,7 @@ class Display:
             self.screen.update()
 
         self._writer.clear()
+        self._hide_overlay_bg()
         self.screen.onkeypress(None, "space")
         self.screen.onkeypress(None, "r")
 
