@@ -2,7 +2,7 @@
 # Screen
 # ---------------------------------------------------------------------------
 SCREEN_WIDTH: int = 600
-SCREEN_HEIGHT: int = 820            # 600 game + 220 overlay strip at bottom
+SCREEN_HEIGHT: int = 600
 SCREEN_BG: str = "white"
 SCREEN_TITLE: str = "Turtle Crossing"
 
@@ -55,14 +55,6 @@ HUD_Y: int = 260                  # y-position of the level counter
 HUD_X: int = -270                 # x-position of level label (left-aligned)
 HUD_RIGHT_X: int = 270            # x-position of best score (right-aligned)
 HUD_FONT_SIZE: int = 24
+FINISH_LINE_DISPLAY_Y: int = 270  # y of the visual finish line drawn on screen
 ROAD_TOP_Y: int = 250             # top boundary of the road area (car spawns)
 ROAD_BOTTOM_Y: int = -250         # bottom boundary of the road area
-
-# ---------------------------------------------------------------------------
-# Overlay strip (below game area — no cars spawn here, no z-order issues)
-# ---------------------------------------------------------------------------
-OVERLAY_SEPARATOR_Y: int = -305   # horizontal line separating game from strip
-OVERLAY_BG_TOP: int = -305        # top of the grey strip (turtle y)
-OVERLAY_BG_BOTTOM: int = -410     # bottom of the grey strip
-OVERLAY_HEADING_Y: int = -330     # y for main overlay heading text
-OVERLAY_SUBTEXT_Y: int = -375     # y for options/subtext line
